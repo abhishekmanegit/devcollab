@@ -13,7 +13,14 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    // CREATE PROJECT
+
+    @PostMapping("/{id}/join")
+    public String joinProject(@PathVariable Long id, Authentication auth) {
+
+        return projectService.joinProject(id, auth.getName());
+    }
+
+
     @PostMapping
     public Project createProject(
             Authentication auth,
@@ -26,7 +33,7 @@ public class ProjectController {
         );
     }
 
-    // GET ALL PROJECTS
+
     @GetMapping
     public List<Project> getAllProjects() {
         return projectService.getAllProjects();

@@ -13,6 +13,25 @@ public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ProjectMemberRepository projectMemberRepository;
+
+    public String joinProject(Long projectId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        ProjectMember member = ProjectMember.builder()
+                .user(user)
+                .project(project)
+                .build();
+
+        projectMemberRepository.save(member);
+
+        return "Joined project successfully";
+    }
 
     public Project createProject(String title, String description, String email) {
 
