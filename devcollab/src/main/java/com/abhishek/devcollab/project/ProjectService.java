@@ -15,24 +15,7 @@ public class ProjectService {
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
 
-    public String joinProject(Long projectId, String email) {
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
-
-        ProjectMember member = ProjectMember.builder()
-                .user(user)
-                .project(project)
-                .build();
-
-        projectMemberRepository.save(member);
-
-        return "Joined project successfully";
-    }
-
+    // CREATE PROJECT
     public Project createProject(String title, String description, String email) {
 
         User user = userRepository.findByEmail(email)
@@ -47,7 +30,40 @@ public class ProjectService {
         return projectRepository.save(project);
     }
 
+    // GET ALL PROJECTS
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
+    }
+
+    // JOIN PROJECT
+    public String joinProject(Long projectId, String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        if (projectMemberRepository.existsByUserAndProject(user, project)) {
+            return "Already joined this project";
+        }
+
+        ProjectMember member = ProjectMember.builder()
+                .user(user)
+                .project(project)
+                .build();
+
+        projectMemberRepository.save(member);
+
+        return "Joined project successfully";
+    }
+
+    // GET MEMBERS
+    public List<ProjectMember> getProjectMembers(Long projectId) {
+
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        return projectMemberRepository.findByProject(project);
     }
 }

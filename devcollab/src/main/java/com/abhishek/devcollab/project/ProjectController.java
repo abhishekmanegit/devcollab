@@ -20,6 +20,11 @@ public class ProjectController {
         return projectService.joinProject(id, auth.getName());
     }
 
+    @GetMapping("/{id}/members")
+    public List<ProjectMember> getMembers(@PathVariable Long id) {
+        return projectService.getProjectMembers(id);
+    }
+
 
     @PostMapping
     public Project createProject(
