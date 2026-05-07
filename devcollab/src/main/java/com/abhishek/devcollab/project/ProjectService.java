@@ -58,12 +58,25 @@ public class ProjectService {
         return "Joined project successfully";
     }
 
-    // GET MEMBERS
+
     public List<ProjectMember> getProjectMembers(Long projectId) {
 
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
         return projectMemberRepository.findByProject(project);
+    }
+
+    public List<Project> getMyProjects(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        List<ProjectMember> memberships =
+                projectMemberRepository.findByUser(user);
+
+        return memberships.stream()
+                .map(ProjectMember::getProject)
+                .toList();
     }
 }

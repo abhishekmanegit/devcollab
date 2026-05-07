@@ -25,6 +25,12 @@ public class ProjectController {
         return projectService.getProjectMembers(id);
     }
 
+    @GetMapping("/my-projects")
+    public List<Project> getMyProjects(Authentication auth) {
+
+        return projectService.getMyProjects(auth.getName());
+    }
+
 
     @PostMapping
     public Project createProject(
