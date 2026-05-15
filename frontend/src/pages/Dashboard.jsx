@@ -6,6 +6,8 @@ function Dashboard() {
   const [projects, setProjects] = useState([])
   const [comments, setComments] = useState({})
 const [commentText, setCommentText] = useState("")
+const [title, setTitle] = useState("")
+const [description, setDescription] = useState("")
 
   useEffect(() => {
 
@@ -91,12 +93,62 @@ const addComment = async (projectId) => {
   }
 }
 
+const createProject = async () => {
+
+  try {
+
+    await api.post("/projects", {
+      title,
+      description,
+    })
+
+    setTitle("")
+    setDescription("")
+
+    fetchProjects()
+
+  } catch (error) {
+
+    console.log(error)
+  }
+}
+
   return (
     <div className="min-h-screen bg-black text-white p-10">
 
       <h1 className="text-4xl font-bold mb-8">
         DEVCOLLAB 🚀
       </h1>
+
+      <div className="bg-zinc-900 p-6 rounded-2xl mb-8">
+
+  <h2 className="text-2xl font-bold mb-4">
+    Create Project
+  </h2>
+
+  <input
+    type="text"
+    placeholder="Project title"
+    value={title}
+    onChange={(e) => setTitle(e.target.value)}
+    className="w-full p-3 mb-4 rounded-lg bg-zinc-800 text-white outline-none"
+  />
+
+  <textarea
+    placeholder="Project description"
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+    className="w-full p-3 mb-4 rounded-lg bg-zinc-800 text-white outline-none"
+  />
+
+  <button
+    onClick={createProject}
+    className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-300"
+  >
+    Create Project
+  </button>
+
+</div>
 
       <div className="grid gap-6">
 
