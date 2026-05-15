@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import api from "../services/api"
+import Navbar from "../components/Navbar"
 
 function Dashboard() {
 
@@ -116,9 +117,7 @@ const createProject = async () => {
   return (
     <div className="min-h-screen bg-black text-white p-10">
 
-      <h1 className="text-4xl font-bold mb-8">
-        DEVCOLLAB 🚀
-      </h1>
+      <Navbar />
 
       <div className="bg-zinc-900 p-6 rounded-2xl mb-8">
 
