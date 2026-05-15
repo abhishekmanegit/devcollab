@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import api from "../services/api"
 import Navbar from "../components/Navbar"
+import ProfileCard from "../components/ProfileCard"
 
 function Dashboard() {
 
@@ -118,6 +119,7 @@ const createProject = async () => {
     <div className="min-h-screen bg-black text-white p-10">
 
       <Navbar />
+      <ProfileCard />
 
       <div className="bg-zinc-900 p-6 rounded-2xl mb-8">
 
@@ -171,9 +173,7 @@ const createProject = async () => {
               Created by: {project.createdBy?.name}
             </p>
 
-           <p className="mt-4 text-sm text-gray-400">
-  Created by: {project.createdBy?.name}
-</p>
+          
 
 <button
   onClick={() => joinProject(project.id)}
