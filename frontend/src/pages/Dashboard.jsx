@@ -143,40 +143,41 @@ const createProject = async () => {
   <button
     onClick={createProject}
     className="bg-white text-black px-6 py-3 rounded-lg font-bold hover:bg-gray-300"
+    
   >
     Create Project
   </button>
 
 </div>
 
-      <div className="grid gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         {projects.map((project) => (
 
           <div
             key={project.id}
-            className="bg-zinc-900 p-6 rounded-2xl shadow-lg"
+            className="bg-gradient-to-br from-zinc-900 to-zinc-800 p-6 rounded-3xl shadow-xl border border-zinc-700 hover:scale-[1.02] transition-all duration-300"
           >
 
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-2xl font-bold text-white mb-2">
               {project.title}
             </h2>
 
-            <p className="text-gray-400 mt-2">
+            <p className="text-gray-300 leading-relaxed">
               {project.description}
             </p>
 
-            <p className="mt-4 text-sm text-gray-500">
+            <p className="mt-4 text-sm text-gray-400">
               Created by: {project.createdBy?.name}
             </p>
 
-            <p className="mt-4 text-sm text-gray-500">
+           <p className="mt-4 text-sm text-gray-400">
   Created by: {project.createdBy?.name}
 </p>
 
 <button
   onClick={() => joinProject(project.id)}
-  className="mt-4 bg-white text-black px-4 py-2 rounded-lg font-bold hover:bg-gray-300"
+  className="mt-4 w-full bg-white text-black px-4 py-3 rounded-xl font-bold hover:bg-gray-300 transition-all"
 >
   Join Project
 </button>
@@ -193,7 +194,7 @@ const createProject = async () => {
 
       <div
         key={comment.id}
-        className="bg-zinc-800 p-3 rounded-lg"
+        className="bg-zinc-800/70 p-3 rounded-xl border border-zinc-700"
       >
 
         <p className="text-sm text-gray-300">
@@ -217,12 +218,12 @@ const createProject = async () => {
       placeholder="Write a comment..."
       value={commentText}
       onChange={(e) => setCommentText(e.target.value)}
-      className="flex-1 p-2 rounded-lg bg-zinc-800 text-white outline-none"
+      className="flex-1 p-3 rounded-xl bg-zinc-800 text-white outline-none border border-zinc-700"
     />
 
     <button
       onClick={() => addComment(project.id)}
-      className="bg-white text-black px-4 rounded-lg font-bold"
+      className="bg-white text-black px-5 rounded-xl font-bold hover:bg-gray-300"
     >
       Send
     </button>
