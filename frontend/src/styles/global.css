@@ -1,0 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #F6F5F2;
+  --surface: #FFFFFF;
+  --surface-2: #F1F0EC;
+  --border: #E5E4DF;
+  --border-2: #D3D2CC;
+  --t1: #111110;
+  --t2: #5C5C58;
+  --t3: #A0A09A;
+  --accent: #1A4ED8;
+  --accent-bg: #EEF2FF;
+  --accent-h: #1540B8;
+  --green: #15803D;
+  --green-bg: #F0FDF4;
+  --red: #DC2626;
+  --r-sm: 6px;
+  --r: 10px;
+  --r-lg: 14px;
+  --sh: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --sh-md: 0 4px 14px rgba(0,0,0,0.09);
+  --sh-lg: 0 12px 36px rgba(0,0,0,0.13);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--t1);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .brand {
+  font-family: 'Bricolage Grotesque', sans-serif;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+input, textarea {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--t1);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(26, 78, 216, 0.08);
+}
+
+input::placeholder, textarea::placeholder { color: var(--t3); }
+
+button {
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.15s;
+}
+
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(8px); }  to { opacity: 1; transform: translateY(0); } }
+@keyframes slideIn  { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes scaleIn  { from { opacity: 0; transform: scale(0.95); }      to { opacity: 1; transform: scale(1); } }
+@keyframes spin     { to { transform: rotate(360deg); } }
+
+.anim-fadeup  { animation: fadeUp  0.28s ease forwards; }
+.anim-slidein { animation: slideIn 0.24s ease forwards; }
+.anim-scalein { animation: scaleIn 0.18s ease forwards; }
+.spin         { animation: spin    0.75s linear infinite; }
