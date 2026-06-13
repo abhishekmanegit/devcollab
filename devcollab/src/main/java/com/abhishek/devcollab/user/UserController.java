@@ -5,11 +5,12 @@ import com.abhishek.devcollab.dto.UserResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.abhishek.devcollab.dto.UpdateProfileDTO;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users") // 👈 FIXED
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -38,11 +39,11 @@ public class UserController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
-    // 🔥 UPDATE PROFILE
+
     @PutMapping("/update")
     public String updateProfile(
             Authentication authentication,
-            @RequestBody UserProfileDTO dto
+            @RequestBody UpdateProfileDTO dto
     ) {
 
         String email = authentication.getName();
@@ -50,9 +51,9 @@ public class UserController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        user.setName(dto.getName());
         user.setBio(dto.getBio());
-        user.setSkills(dto.getSkills());
+
+        user.setSkills(String.join(",", dto.getSkills()));;
 
         userRepository.save(user);
 

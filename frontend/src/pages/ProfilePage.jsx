@@ -4,9 +4,16 @@ import { api } from "../api/api";
 
 export default function ProfilePage({ token, user, setUser }) {
   const [editing, setEditing] = useState(false);
-  const [form, setForm]       = useState({ bio: user?.bio || "", skills: (user?.skills || []).join(", ") });
+  const [form, setForm]       = useState({ bio: user?.bio || "", skills: Array.isArray(user?.skills)
+  ? user.skills.join(", ")
+  : user?.skills || "" });
   const [saving, setSaving]   = useState(false);
   const [msg, setMsg]         = useState("");
+  const skillsArray = Array.isArray(user?.skills)
+  ? user.skills
+  : typeof user?.skills === "string"
+    ? user.skills.split(",").map(s => s.trim()).filter(Boolean)
+    : [];
 
   async function save() {
     setSaving(true); setMsg("");
@@ -107,9 +114,9 @@ export default function ProfilePage({ token, user, setUser }) {
               {/* Skills */}
               <div>
                 <p style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 10 }}>Skills</p>
-                {(user?.skills || []).length > 0 ? (
+                {skillsArray.length > 0 ? (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                    {user.skills.map((s, i) => (
+                    {skillsArray.map((s, i) => (
                       <span key={i} style={{ padding: "5px 13px", fontSize: 13, fontWeight: 500, background: "var(--accent-bg)", color: "var(--accent)", borderRadius: 20 }}>
                         {s}
                       </span>

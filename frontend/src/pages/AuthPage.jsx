@@ -3,12 +3,12 @@ import { Code2, Eye, EyeOff, ArrowRight, Loader2, Users, MessageSquare, Sparkles
 import { api } from "../api/api";
 
 export default function AuthPage({ onAuth }) {
-  const [tab, setTab]       = useState("login");
-  const [form, setForm]     = useState({ username: "", email: "", password: "" });
+  const [tab, setTab]         = useState("login");
+  const [form, setForm]       = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
-  const [err, setErr]       = useState("");
+  const [err, setErr]         = useState("");
   const [success, setSuccess] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [showPw, setShowPw]   = useState(false);
 
   const handleField = key => e => setForm(prev => ({ ...prev, [key]: e.target.value }));
 
@@ -16,23 +16,26 @@ export default function AuthPage({ onAuth }) {
     setLoading(true); setErr(""); setSuccess("");
     try {
       if (tab === "register") {
-        await api("/auth/register", { method: "POST", body: JSON.stringify(form) });
+        await api("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({ name: form.name, email: form.email, password: form.password }),
+        });
         setSuccess("Account created! Please sign in.");
         setTab("login");
-        setForm(prev => ({ ...prev, email: "" }));
+        setForm({ name: "", email: form.email, password: "" });
       } else {
         const data = await api("/auth/login", {
           method: "POST",
-          body: JSON.stringify({ username: form.username, password: form.password }),
+          body: JSON.stringify({ email: form.email, password: form.password }),
         });
-        const token = data.token || data.jwt || data.accessToken;
+        const token = typeof data === "string" ? data : (data.token || data.jwt || data.accessToken);
         onAuth(token);
       }
     } catch {
       setErr(
         tab === "login"
           ? "Invalid credentials. Please try again."
-          : "Registration failed. Username may already be taken."
+          : "Registration failed. Email may already be taken."
       );
     } finally {
       setLoading(false);
@@ -43,19 +46,15 @@ export default function AuthPage({ onAuth }) {
     <div style={{ minHeight: "100vh", display: "flex", background: "var(--bg)" }}>
 
       {/* ── Left brand panel ── */}
-      <div
-        style={{
-          width: "42%", background: "#0D1117", flexShrink: 0,
-          display: "flex", flexDirection: "column", justifyContent: "center",
-          padding: "60px 56px", position: "relative", overflow: "hidden",
-        }}
-      >
-        {/* Glow blobs */}
+      <div style={{
+        width: "42%", background: "#0D1117", flexShrink: 0,
+        display: "flex", flexDirection: "column", justifyContent: "center",
+        padding: "60px 56px", position: "relative", overflow: "hidden",
+      }}>
         <div style={{ position: "absolute", top: -100, right: -60, width: 280, height: 280, borderRadius: "50%", background: "rgba(26,78,216,.18)", filter: "blur(70px)" }} />
         <div style={{ position: "absolute", bottom: -60, left: -40, width: 220, height: 220, borderRadius: "50%", background: "rgba(21,128,61,.12)", filter: "blur(50px)" }} />
 
         <div style={{ position: "relative", zIndex: 1 }}>
-          {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 52 }}>
             <div style={{ width: 36, height: 36, borderRadius: 9, background: "linear-gradient(135deg,#1A4ED8,#6366F1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Code2 size={18} color="#fff" />
@@ -72,7 +71,6 @@ export default function AuthPage({ onAuth }) {
             DevCollab connects developers to collaborate on real projects, share expertise, and grow together.
           </p>
 
-          {/* Stats */}
           <div style={{ display: "flex", gap: 28, marginTop: 44 }}>
             {[["200+", "Projects"], ["1.2k+", "Developers"], ["3k+", "Collaborations"]].map(([v, k]) => (
               <div key={k}>
@@ -82,12 +80,11 @@ export default function AuthPage({ onAuth }) {
             ))}
           </div>
 
-          {/* Features */}
           <div style={{ marginTop: 52, display: "flex", flexDirection: "column", gap: 12 }}>
             {[
-              { icon: <Users size={14} />,        text: "Join open source projects" },
-              { icon: <MessageSquare size={14} />, text: "Comment & collaborate" },
-              { icon: <Sparkles size={14} />,      text: "Showcase your skills" },
+              { icon: <Users size={14} />,         text: "Join open source projects" },
+              { icon: <MessageSquare size={14} />,  text: "Comment & collaborate" },
+              { icon: <Sparkles size={14} />,       text: "Showcase your skills" },
             ].map(({ icon, text }, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, color: "#94A3B8", fontSize: 14 }}>
                 <span style={{ color: "#6366F1" }}>{icon}</span>{text}
@@ -115,9 +112,7 @@ export default function AuthPage({ onAuth }) {
                   boxShadow: tab === t ? "var(--sh)" : "none",
                   textTransform: "capitalize",
                 }}
-              >
-                {t}
-              </button>
+              >{t}</button>
             ))}
           </div>
 
@@ -130,18 +125,32 @@ export default function AuthPage({ onAuth }) {
 
           {/* Fields */}
           <div style={{ display: "flex", flexDirection: "column", gap: 15 }}>
+
+            {/* Name — register only */}
             {tab === "register" && (
               <div>
-                <label style={{ fontSize: 13, fontWeight: 500, color: "var(--t2)", display: "block", marginBottom: 6 }}>Email</label>
-                <input type="email" placeholder="you@example.com" value={form.email} onChange={handleField("email")} />
+                <label style={{ fontSize: 13, fontWeight: 500, color: "var(--t2)", display: "block", marginBottom: 6 }}>Full Name</label>
+                <input
+                  placeholder="John Doe"
+                  value={form.name}
+                  onChange={handleField("name")}
+                />
               </div>
             )}
 
+            {/* Email — both tabs */}
             <div>
-              <label style={{ fontSize: 13, fontWeight: 500, color: "var(--t2)", display: "block", marginBottom: 6 }}>Username</label>
-              <input placeholder="your_username" value={form.username} onChange={handleField("username")} onKeyDown={e => e.key === "Enter" && submit()} />
+              <label style={{ fontSize: 13, fontWeight: 500, color: "var(--t2)", display: "block", marginBottom: 6 }}>Email</label>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={form.email}
+                onChange={handleField("email")}
+                onKeyDown={e => e.key === "Enter" && submit()}
+              />
             </div>
 
+            {/* Password — both tabs */}
             <div>
               <label style={{ fontSize: 13, fontWeight: 500, color: "var(--t2)", display: "block", marginBottom: 6 }}>Password</label>
               <div style={{ position: "relative" }}>
@@ -162,17 +171,21 @@ export default function AuthPage({ onAuth }) {
               </div>
             </div>
 
+            {/* Error */}
             {err && (
               <div style={{ padding: "10px 14px", background: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--red)" }}>
                 {err}
               </div>
             )}
+
+            {/* Success */}
             {success && (
               <div style={{ padding: "10px 14px", background: "var(--green-bg)", border: "1px solid #BBF7D0", borderRadius: "var(--r-sm)", fontSize: 13, color: "var(--green)" }}>
                 {success}
               </div>
             )}
 
+            {/* Submit */}
             <button
               onClick={submit}
               disabled={loading}
@@ -188,6 +201,7 @@ export default function AuthPage({ onAuth }) {
               {tab === "login" ? "Sign In" : "Create Account"}
               {!loading && <ArrowRight size={15} />}
             </button>
+
           </div>
         </div>
       </div>
