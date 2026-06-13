@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./screenshots/banner.png" alt="DevCollab Banner"/>
+</p>
+
 <div align="center">
 
 # 🚀 DevCollab
