@@ -19,7 +19,7 @@ public class CorsConfig {
         config.setAllowCredentials(true);
 
         config.setAllowedOrigins(
-                List.of("http://localhost:5173")
+                List.of("http://localhost:5173", "https://devcollab-bice.vercel.app")
         );
 
         config.setAllowedHeaders(
