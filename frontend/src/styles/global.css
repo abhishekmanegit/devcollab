@@ -77,3 +77,38 @@ button {
 .anim-slidein { animation: slideIn 0.24s ease forwards; }
 .anim-scalein { animation: scaleIn 0.18s ease forwards; }
 .spin         { animation: spin    0.75s linear infinite; }
+
+.auth-tagline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.auth-tagline::before,
+.auth-tagline::after {
+  content: "";
+  flex: 1;
+  max-width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-2));
+}
+
+.auth-tagline::after {
+  background: linear-gradient(90deg, var(--border-2), transparent);
+}
+
+.auth-tagline-text {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+  white-space: nowrap;
+  background: linear-gradient(135deg, var(--accent) 0%, #6366F1 50%, #818CF8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

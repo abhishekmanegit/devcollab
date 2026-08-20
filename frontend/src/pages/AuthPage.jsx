@@ -71,15 +71,6 @@ export default function AuthPage({ onAuth }) {
             DevCollab connects developers to collaborate on real projects, share expertise, and grow together.
           </p>
 
-          <div style={{ display: "flex", gap: 28, marginTop: 44 }}>
-            {[["200+", "Projects"], ["1.2k+", "Developers"], ["3k+", "Collaborations"]].map(([v, k]) => (
-              <div key={k}>
-                <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontSize: 22, fontWeight: 700, color: "#fff" }}>{v}</div>
-                <div style={{ fontSize: 12, color: "#475569", marginTop: 2 }}>{k}</div>
-              </div>
-            ))}
-          </div>
-
           <div style={{ marginTop: 52, display: "flex", flexDirection: "column", gap: 12 }}>
             {[
               { icon: <Users size={14} />,         text: "Join open source projects" },
@@ -97,6 +88,10 @@ export default function AuthPage({ onAuth }) {
       {/* ── Right form panel ── */}
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
         <div style={{ width: "100%", maxWidth: 400 }} className="anim-fadeup">
+
+          <div className="auth-tagline">
+            <span className="auth-tagline-text">Built by developers, for developers</span>
+          </div>
 
           {/* Tabs */}
           <div style={{ display: "flex", background: "var(--surface-2)", borderRadius: "var(--r)", padding: 4, marginBottom: 32 }}>
