@@ -94,7 +94,7 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
                 fontSize: 12, fontWeight: 700, color: "var(--accent)", flexShrink: 0,
               }}
             >
-              {user.username?.[0]?.toUpperCase() || "U"}
+              {user.name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || "U"}
             </div>
             <div style={{ minWidth: 0 }}>
               <div
@@ -103,7 +103,7 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}
               >
-                {user.username}
+                {user.name || user.username}
               </div>
               <div style={{ fontSize: 11, color: "var(--t3)" }}>Developer</div>
             </div>

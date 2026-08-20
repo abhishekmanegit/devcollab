@@ -14,6 +14,7 @@ export default function App() {
   const [page, setPage]             = useState("dashboard");
   const [showCreate, setShowCreate] = useState(false);
   const [toast, setToast]           = useState(null);
+  const [projectRefresh, setProjectRefresh] = useState(0);
 
   // Fetch logged-in user on load
   useEffect(() => {
@@ -61,6 +62,8 @@ export default function App() {
         <Dashboard
           token={token}
           user={user}
+          refreshKey={projectRefresh}
+          onToast={showToast}
           onShowCreate={() => setShowCreate(true)}
         />
       )}
@@ -77,7 +80,10 @@ export default function App() {
         <CreateProjectModal
           token={token}
           onClose={() => setShowCreate(false)}
-          onCreated={() => showToast("Project created successfully!")}
+          onCreated={() => {
+            showToast("Project created successfully!");
+            setProjectRefresh(k => k + 1);
+          }}
         />
       )}
 

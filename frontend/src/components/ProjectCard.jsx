@@ -10,23 +10,38 @@ const PALETTES = [
   ["#F0FDFA", "#0F766E"],
 ];
 
+function creatorName(project) {
+  return project.creatorName || project.createdBy?.name || project.owner?.username || "Unknown";
+}
+
 export default function ProjectCard({ project, token, onOpen, onJoin }) {
-  const [joining, setJoining]   = useState(false);
-  const [joined, setJoined]     = useState(false);
+  const [joining, setJoining] = useState(false);
+  const joined = project.joined;
+  const isOwner = project.owner;
 
   const [bg, fg] = PALETTES[(project.id || 0) % PALETTES.length];
-  const name    = project.title || project.name || "Untitled";
-  const creator = project.owner?.username || project.creator?.username || "Unknown";
+  const name = project.title || project.name || "Untitled";
+  const creator = creatorName(project);
+  const memberCount = project.memberCount ?? 0;
 
   async function handleJoin(e) {
     e.stopPropagation();
+    if (joined || isOwner || joining) return;
+
     setJoining(true);
     try {
-      await api(`/projects/${project.id}/join`, { method: "POST" }, token);
-      setJoined(true);
-      onJoin?.();
-    } catch (err) {
-      console.error("Join failed:", err);
+      const res = await api(`/projects/${project.id}/join`, { method: "POST" }, token);
+      const message = res?.message || res;
+
+      if (typeof message === "string" && message.toLowerCase().includes("success")) {
+        onJoin?.({ type: "success", msg: `You joined ${name}!` });
+      } else if (typeof message === "string" && message.toLowerCase().includes("already")) {
+        onJoin?.({ type: "info", msg: message });
+      } else {
+        onJoin?.({ type: "info", msg: message || "Request completed" });
+      }
+    } catch {
+      onJoin?.({ type: "error", msg: "Could not join project. Please try again." });
     } finally {
       setJoining(false);
     }
@@ -47,13 +62,13 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
         transition: "all 0.18s",
       }}
       onMouseEnter={e => {
-        e.currentTarget.style.boxShadow   = "var(--sh-md)";
-        e.currentTarget.style.transform   = "translateY(-2px)";
+        e.currentTarget.style.boxShadow = "var(--sh-md)";
+        e.currentTarget.style.transform = "translateY(-2px)";
         e.currentTarget.style.borderColor = "var(--border-2)";
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.boxShadow   = "none";
-        e.currentTarget.style.transform   = "none";
+        e.currentTarget.style.boxShadow = "none";
+        e.currentTarget.style.transform = "none";
         e.currentTarget.style.borderColor = "var(--border)";
       }}
     >
@@ -70,10 +85,12 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
         <span
           style={{
             fontSize: 11, padding: "3px 9px", borderRadius: 20,
-            background: "var(--green-bg)", color: "var(--green)", fontWeight: 500,
+            background: joined ? "var(--accent-bg)" : "var(--green-bg)",
+            color: joined ? "var(--accent)" : "var(--green)",
+            fontWeight: 500,
           }}
         >
-          Open
+          {isOwner ? "Owner" : joined ? "Joined" : "Open"}
         </span>
       </div>
 
@@ -99,57 +116,50 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
         </p>
       </div>
 
-      {/* Skills */}
-      {project.skills?.length > 0 && (
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {project.skills.slice(0, 3).map((s, i) => (
-            <span
-              key={i}
-              style={{
-                padding: "2px 8px", fontSize: 11, fontWeight: 500,
-                background: bg, color: fg, borderRadius: 20,
-              }}
-            >
-              {s}
-            </span>
-          ))}
-          {project.skills.length > 3 && (
-            <span style={{ fontSize: 11, color: "var(--t3)" }}>+{project.skills.length - 3}</span>
-          )}
-        </div>
-      )}
-
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <div
-            style={{
-              width: 20, height: 20, borderRadius: "50%",
-              background: "var(--accent-bg)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 9, fontWeight: 700, color: "var(--accent)",
-            }}
-          >
-            {creator[0]?.toUpperCase()}
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <div
+              style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: "var(--accent-bg)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 9, fontWeight: 700, color: "var(--accent)",
+              }}
+            >
+              {creator[0]?.toUpperCase()}
+            </div>
+            <span style={{ fontSize: 12, color: "var(--t2)" }}>{creator}</span>
           </div>
-          <span style={{ fontSize: 12, color: "var(--t2)" }}>{creator}</span>
+          {memberCount > 0 && (
+            <span style={{ fontSize: 11, color: "var(--t3)", display: "flex", alignItems: "center", gap: 3 }}>
+              <Users size={11} /> {memberCount}
+            </span>
+          )}
         </div>
 
-        <button
-          onClick={handleJoin}
-          disabled={joined || joining}
-          style={{
-            padding: "5px 12px", fontSize: 12, fontWeight: 600,
-            background: joined ? "var(--green-bg)" : joining ? "#94A3B8" : "var(--accent)",
-            color: joined ? "var(--green)" : "#fff",
-            borderRadius: "var(--r-sm)",
-            display: "flex", alignItems: "center", gap: 4,
-            opacity: joining ? 0.8 : 1,
-          }}
-        >
-          {joining ? <Loader2 size={11} className="spin" /> : <Users size={11} />}
-          {joined ? "Joined!" : "Join"}
-        </button>
+        {isOwner ? (
+          <span style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", padding: "5px 0" }}>
+            Your project
+          </span>
+        ) : (
+          <button
+            onClick={handleJoin}
+            disabled={joined || joining}
+            style={{
+              padding: "5px 12px", fontSize: 12, fontWeight: 600,
+              background: joined ? "var(--green-bg)" : joining ? "#94A3B8" : "var(--accent)",
+              color: joined ? "var(--green)" : "#fff",
+              borderRadius: "var(--r-sm)",
+              display: "flex", alignItems: "center", gap: 4,
+              opacity: joining ? 0.8 : 1,
+            }}
+          >
+            {joining ? <Loader2 size={11} className="spin" /> : <Users size={11} />}
+            {joined ? "Joined" : "Join"}
+          </button>
+        )}
       </div>
     </div>
   );

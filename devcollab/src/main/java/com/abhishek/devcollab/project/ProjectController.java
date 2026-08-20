@@ -1,10 +1,13 @@
 package com.abhishek.devcollab.project;
 
+import com.abhishek.devcollab.dto.MemberResponseDTO;
+import com.abhishek.devcollab.dto.ProjectResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -13,27 +16,24 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-
     @PostMapping("/{id}/join")
-    public String joinProject(@PathVariable Long id, Authentication auth) {
-
-        return projectService.joinProject(id, auth.getName());
+    public Map<String, String> joinProject(@PathVariable Long id, Authentication auth) {
+        String message = projectService.joinProject(id, auth.getName());
+        return Map.of("message", message);
     }
 
     @GetMapping("/{id}/members")
-    public List<ProjectMember> getMembers(@PathVariable Long id) {
+    public List<MemberResponseDTO> getMembers(@PathVariable Long id) {
         return projectService.getProjectMembers(id);
     }
 
     @GetMapping("/my-projects")
-    public List<Project> getMyProjects(Authentication auth) {
-
+    public List<ProjectResponseDTO> getMyProjects(Authentication auth) {
         return projectService.getMyProjects(auth.getName());
     }
 
-
     @PostMapping
-    public Project createProject(
+    public ProjectResponseDTO createProject(
             Authentication auth,
             @RequestBody Project project
     ) {
@@ -44,9 +44,8 @@ public class ProjectController {
         );
     }
 
-
     @GetMapping
-    public List<Project> getAllProjects() {
-        return projectService.getAllProjects();
+    public List<ProjectResponseDTO> getAllProjects(Authentication auth) {
+        return projectService.getAllProjects(auth.getName());
     }
 }

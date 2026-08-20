@@ -1,17 +1,38 @@
 import { useState, useEffect } from "react";
-import { X, MessageSquare, Send, Loader2 } from "lucide-react";
+import { X, MessageSquare, Send, Loader2, Users } from "lucide-react";
 import { api } from "../api/api";
 
-export default function ProjectDetailPanel({ project, token, onClose }) {
+function creatorName(project) {
+  return project.creatorName || project.createdBy?.name || project.owner?.username || "Unknown";
+}
+
+export default function ProjectDetailPanel({ project, token, onClose, onJoin, onRefresh }) {
   const [comments, setComments] = useState([]);
+  const [members, setMembers]   = useState([]);
   const [text, setText]         = useState("");
   const [sending, setSending]   = useState(false);
+  const [joining, setJoining]   = useState(false);
   const [loading, setLoading]   = useState(true);
 
+  const joined = project.joined;
+  const isOwner = project.owner;
+  const name = project.title || project.name;
+  const creator = creatorName(project);
+
   useEffect(() => {
-    api(`/projects/${project.id}/comments`, {}, token)
-      .then(data => setComments(Array.isArray(data) ? data : []))
-      .catch(() => setComments([]))
+    setLoading(true);
+    Promise.all([
+      api(`/projects/${project.id}/comments`, {}, token),
+      api(`/projects/${project.id}/members`, {}, token),
+    ])
+      .then(([commentData, memberData]) => {
+        setComments(Array.isArray(commentData) ? commentData : []);
+        setMembers(Array.isArray(memberData) ? memberData : []);
+      })
+      .catch(() => {
+        setComments([]);
+        setMembers([]);
+      })
       .finally(() => setLoading(false));
   }, [project.id, token]);
 
@@ -33,7 +54,26 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
     }
   }
 
-  const creator = project.owner?.username || project.creator?.username || "Unknown";
+  async function handleJoin() {
+    if (joined || isOwner || joining) return;
+    setJoining(true);
+    try {
+      const res = await api(`/projects/${project.id}/join`, { method: "POST" }, token);
+      const message = res?.message || res;
+      if (typeof message === "string" && message.toLowerCase().includes("success")) {
+        onJoin?.({ type: "success", msg: `You joined ${name}!` });
+      } else {
+        onJoin?.({ type: "info", msg: message || "Request completed" });
+      }
+      const memberData = await api(`/projects/${project.id}/members`, {}, token);
+      setMembers(Array.isArray(memberData) ? memberData : []);
+      onRefresh?.();
+    } catch {
+      onJoin?.({ type: "error", msg: "Could not join project. Please try again." });
+    } finally {
+      setJoining(false);
+    }
+  }
 
   return (
     <div
@@ -61,9 +101,9 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--green)" }} />
+            <div style={{ width: 7, height: 7, borderRadius: "50%", background: joined ? "var(--accent)" : "var(--green)" }} />
             <span style={{ fontSize: 12, fontWeight: 600, color: "var(--t2)", textTransform: "uppercase", letterSpacing: ".06em" }}>
-              Project
+              {isOwner ? "Your Project" : joined ? "Collaborator" : "Open Project"}
             </span>
           </div>
           <button onClick={onClose} style={{ background: "none", color: "var(--t2)", display: "flex", padding: 4, borderRadius: 6 }}>
@@ -80,7 +120,7 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
               marginBottom: 10, lineHeight: 1.3,
             }}
           >
-            {project.title || project.name}
+            {name}
           </h2>
 
           {/* Creator */}
@@ -104,22 +144,64 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
             {project.description || "No description provided."}
           </p>
 
-          {/* Skills */}
-          {project.skills?.length > 0 && (
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 7, marginBottom: 26 }}>
-              {project.skills.map((s, i) => (
-                <span
-                  key={i}
-                  style={{
-                    padding: "4px 12px", fontSize: 12, fontWeight: 500,
-                    background: "var(--accent-bg)", color: "var(--accent)", borderRadius: 20,
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
+          {/* Join CTA */}
+          {!isOwner && !joined && (
+            <button
+              onClick={handleJoin}
+              disabled={joining}
+              style={{
+                width: "100%", padding: "10px 0", marginBottom: 22,
+                background: joining ? "#94A3B8" : "var(--accent)", color: "#fff",
+                borderRadius: "var(--r-sm)", fontSize: 14, fontWeight: 600,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              }}
+            >
+              {joining ? <Loader2 size={15} className="spin" /> : <Users size={15} />}
+              Join this project
+            </button>
           )}
+
+          {/* Team */}
+          <div style={{ marginBottom: 26 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
+              <Users size={14} color="var(--t2)" />
+              <span style={{ fontWeight: 600, fontSize: 14, color: "var(--t1)" }}>
+                Team {members.length > 0 && <span style={{ color: "var(--t3)", fontWeight: 400 }}>({members.length})</span>}
+              </span>
+            </div>
+            {loading ? (
+              <div style={{ display: "flex", justifyContent: "center", padding: 16 }}>
+                <Loader2 size={18} className="spin" color="var(--t3)" />
+              </div>
+            ) : members.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--t3)" }}>No collaborators yet.</p>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {members.map(m => (
+                  <div
+                    key={m.id}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 7,
+                      padding: "6px 12px", background: "var(--surface-2)",
+                      borderRadius: 20, fontSize: 13,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 22, height: 22, borderRadius: "50%",
+                        background: "var(--accent-bg)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 10, fontWeight: 700, color: "var(--accent)",
+                      }}
+                    >
+                      {(m.name || "?")[0]?.toUpperCase()}
+                    </div>
+                    <span style={{ fontWeight: 500, color: "var(--t1)" }}>{m.name}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
 
           <div style={{ height: 1, background: "var(--border)", marginBottom: 22 }} />
 
@@ -127,7 +209,7 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
           <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 16 }}>
             <MessageSquare size={14} color="var(--t2)" />
             <span style={{ fontWeight: 600, fontSize: 14, color: "var(--t1)" }}>
-              Comments{" "}
+              Discussion{" "}
               {comments.length > 0 && (
                 <span style={{ color: "var(--t3)", fontWeight: 400 }}>({comments.length})</span>
               )}
@@ -146,7 +228,7 @@ export default function ProjectDetailPanel({ project, token, onClose }) {
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {comments.map((c, i) => {
-                const author = c.user?.username || c.author || "Anonymous";
+                const author = c.user?.name || c.user?.username || c.author || "Anonymous";
                 return (
                   <div key={i} style={{ display: "flex", gap: 10 }}>
                     <div
