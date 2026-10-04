@@ -1,4 +1,5 @@
 import { LayoutDashboard, User, LogOut, Code2 } from "lucide-react";
+import Avatar from "./Avatar";
 
 export default function Sidebar({ page, setPage, user, onLogout }) {
   const navItems = [
@@ -85,17 +86,11 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
               padding: "8px 10px", marginBottom: 2,
             }}
           >
-            <div
-              style={{
-                width: 28, height: 28, borderRadius: "50%",
-                background: "var(--accent-bg)",
-                border: "1.5px solid #C7D7F8",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 12, fontWeight: 700, color: "var(--accent)", flexShrink: 0,
-              }}
-            >
-              {user.name?.[0]?.toUpperCase() || user.username?.[0]?.toUpperCase() || "U"}
-            </div>
+            <Avatar
+              user={user}
+              size={28}
+              style={{ border: "1.5px solid #C7D7F8", background: "var(--accent-bg)", color: "var(--accent)" }}
+            />
             <div style={{ minWidth: 0 }}>
               <div
                 style={{

@@ -5,6 +5,8 @@ import com.abhishek.devcollab.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 @Setter
@@ -17,6 +19,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 2000)
     private String content;
 
     @ManyToOne
@@ -24,4 +27,17 @@ public class Comment {
 
     @ManyToOne
     private Project project;
+
+    // The column default lets ddl-auto=update backfill rows that predate this column
+    // instead of failing with "contains null values".
+    @Column(nullable = false, updatable = false)
+    @org.hibernate.annotations.ColumnDefault("current_timestamp")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

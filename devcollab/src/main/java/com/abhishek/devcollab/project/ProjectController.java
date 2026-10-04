@@ -1,7 +1,9 @@
 package com.abhishek.devcollab.project;
 
+import com.abhishek.devcollab.dto.CreateProjectRequestDTO;
 import com.abhishek.devcollab.dto.MemberResponseDTO;
 import com.abhishek.devcollab.dto.ProjectResponseDTO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -35,13 +37,9 @@ public class ProjectController {
     @PostMapping
     public ProjectResponseDTO createProject(
             Authentication auth,
-            @RequestBody Project project
+            @Valid @RequestBody CreateProjectRequestDTO request
     ) {
-        return projectService.createProject(
-                project.getTitle(),
-                project.getDescription(),
-                auth.getName()
-        );
+        return projectService.createProject(request, auth.getName());
     }
 
     @GetMapping

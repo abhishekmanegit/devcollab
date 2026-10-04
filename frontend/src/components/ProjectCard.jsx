@@ -23,6 +23,7 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
   const name = project.title || project.name || "Untitled";
   const creator = creatorName(project);
   const memberCount = project.memberCount ?? 0;
+  const skills = Array.isArray(project.skills) ? project.skills : [];
 
   async function handleJoin(e) {
     e.stopPropagation();
@@ -40,8 +41,8 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
       } else {
         onJoin?.({ type: "info", msg: message || "Request completed" });
       }
-    } catch {
-      onJoin?.({ type: "error", msg: "Could not join project. Please try again." });
+    } catch (err) {
+      onJoin?.({ type: "error", msg: err?.message || "Could not join project. Please try again." });
     } finally {
       setJoining(false);
     }
@@ -115,6 +116,28 @@ export default function ProjectCard({ project, token, onOpen, onJoin }) {
           {project.description || "No description provided."}
         </p>
       </div>
+
+      {/* Skills */}
+      {skills.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: -4 }}>
+          {skills.slice(0, 3).map(skill => (
+            <span
+              key={skill}
+              style={{
+                fontSize: 11, fontWeight: 500, padding: "3px 9px",
+                borderRadius: 20, background: "var(--surface-2)", color: "var(--t2)",
+              }}
+            >
+              {skill}
+            </span>
+          ))}
+          {skills.length > 3 && (
+            <span style={{ fontSize: 11, color: "var(--t3)", alignSelf: "center" }}>
+              +{skills.length - 3}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Footer */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "auto" }}>

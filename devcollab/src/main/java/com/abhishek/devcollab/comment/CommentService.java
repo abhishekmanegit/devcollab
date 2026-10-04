@@ -1,11 +1,14 @@
 package com.abhishek.devcollab.comment;
 
+import com.abhishek.devcollab.dto.CommentResponseDTO;
+import com.abhishek.devcollab.exception.ApiException;
 import com.abhishek.devcollab.project.Project;
 import com.abhishek.devcollab.project.ProjectRepository;
 import com.abhishek.devcollab.user.User;
 import com.abhishek.devcollab.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,30 +20,48 @@ public class CommentService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
 
-    // ADD COMMENT
-    public Comment addComment(Long projectId, String content, String email) {
+    @Transactional
+    public CommentResponseDTO addComment(Long projectId, String content, String email) {
+
+        if (content == null || content.isBlank()) {
+            throw ApiException.badRequest("Comment cannot be empty");
+        }
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> ApiException.notFound("User not found"));
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> ApiException.notFound("Project not found"));
 
-        Comment comment = Comment.builder()
-                .content(content)
+        Comment comment = commentRepository.save(Comment.builder()
+                .content(content.trim())
                 .user(user)
                 .project(project)
-                .build();
+                .build());
 
-        return commentRepository.save(comment);
+        return toDto(comment);
     }
 
-    // GET COMMENTS
-    public List<Comment> getComments(Long projectId) {
+    @Transactional(readOnly = true)
+    public List<CommentResponseDTO> getComments(Long projectId) {
 
         Project project = projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> ApiException.notFound("Project not found"));
 
-        return commentRepository.findByProject(project);
+        return commentRepository.findByProjectWithAuthors(project).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    private CommentResponseDTO toDto(Comment comment) {
+        User author = comment.getUser();
+        return CommentResponseDTO.builder()
+                .id(comment.getId())
+                .content(comment.getContent())
+                .authorName(author == null ? "Anonymous" : author.getName())
+                .authorGithubUrl(author == null ? null : author.getGithubUrl())
+                .authorAvatarUrl(author == null ? null : author.getProfilePictureUrl())
+                .createdAt(comment.getCreatedAt())
+                .build();
     }
 }

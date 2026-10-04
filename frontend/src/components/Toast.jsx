@@ -1,19 +1,26 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+
+const COLORS = {
+  success: "#15803D",
+  error:   "#DC2626",
+  info:    "#1A4ED8",
+};
+
+const ICONS = { success: "✓", error: "✕", info: "i" };
 
 export default function Toast({ msg, type = "success", onClose }) {
+  const onCloseRef = useRef(onClose);
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 3200);
-    return () => clearTimeout(timer);
+    onCloseRef.current = onClose;
   }, [onClose]);
 
-  const colors = {
-    success: "#15803D",
-    error:   "#DC2626",
-    info:    "#1A4ED8",
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => onCloseRef.current(), 3200);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const icons = { success: "✓", error: "✕", info: "i" };
-  const color = colors[type];
+  const color = COLORS[type] || COLORS.info;
 
   return (
     <div
@@ -36,7 +43,7 @@ export default function Toast({ msg, type = "success", onClose }) {
         maxWidth: 320,
       }}
     >
-      <span style={{ color, fontWeight: 700, fontSize: 16 }}>{icons[type]}</span>
+      <span style={{ color, fontWeight: 700, fontSize: 16 }}>{ICONS[type] || ICONS.info}</span>
       <span style={{ color: "var(--t1)", fontWeight: 500 }}>{msg}</span>
     </div>
   );

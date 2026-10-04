@@ -1,16 +1,38 @@
-# React + Vite
+# DevCollab Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite single-page app for DevCollab.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev      # http://localhost:5173
+npm run lint
+npm run build
+npm run preview
+```
 
-## React Compiler
+## Configuration
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The API base URL defaults to `http://localhost:8080/api`. Point it somewhere else with a `.env` file:
 
-## Expanding the ESLint configuration
+```bash
+VITE_API_BASE_URL=https://your-api.example.com/api
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+The backend CORS allowlist is controlled by the `CORS_ALLOWED_ORIGINS` environment variable — add your
+deployed origin there if you host this app somewhere new.
+
+## Structure
+
+```txt
+src/
+├── api/api.js          # fetch wrapper, ApiError, media/github helpers
+├── components/         # Sidebar, ProjectCard, Avatar, Toast, GithubIcon
+├── modals/             # CreateProjectModal, ProjectDetailPanel
+├── pages/              # AuthPage, Dashboard, ProfilePage
+└── styles/global.css   # design tokens, base inputs, animations
+```
+
+Styling is plain CSS with custom properties (design tokens live in `styles/global.css`); components
+apply styles inline. There is no CSS framework or router — `App.jsx` owns the two-page navigation.

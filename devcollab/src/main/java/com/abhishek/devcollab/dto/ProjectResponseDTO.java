@@ -2,6 +2,9 @@ package com.abhishek.devcollab.dto;
 
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -17,4 +20,7 @@ public class ProjectResponseDTO {
     private long memberCount;
     private boolean joined;
     private boolean owner;
+
+    @Builder.Default
+    private List<String> skills = new ArrayList<>();
 }

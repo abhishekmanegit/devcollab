@@ -1,9 +1,31 @@
-import { useState, useEffect } from "react";
-import { X, MessageSquare, Send, Loader2, Users } from "lucide-react";
-import { api } from "../api/api";
+import { useCallback, useEffect, useState } from "react";
+import { X, MessageSquare, Send, Loader2, Users, Sparkles } from "lucide-react";
+import { api, githubHandle } from "../api/api";
+import Avatar from "../components/Avatar";
+import GithubIcon from "../components/GithubIcon";
 
 function creatorName(project) {
   return project.creatorName || project.createdBy?.name || project.owner?.username || "Unknown";
+}
+
+function timeAgo(value) {
+  if (!value) return "";
+  const then = new Date(value).getTime();
+  if (Number.isNaN(then)) return "";
+
+  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (seconds < 60) return "just now";
+
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+
+  return new Date(value).toLocaleDateString();
 }
 
 export default function ProjectDetailPanel({ project, token, onClose, onJoin, onRefresh }) {
@@ -13,15 +35,16 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
   const [sending, setSending]   = useState(false);
   const [joining, setJoining]   = useState(false);
   const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState("");
 
   const joined = project.joined;
   const isOwner = project.owner;
   const name = project.title || project.name;
   const creator = creatorName(project);
+  const skills = Array.isArray(project.skills) ? project.skills : [];
 
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
+  const loadDiscussion = useCallback(() => {
+    return Promise.all([
       api(`/projects/${project.id}/comments`, {}, token),
       api(`/projects/${project.id}/members`, {}, token),
     ])
@@ -29,16 +52,22 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
         setComments(Array.isArray(commentData) ? commentData : []);
         setMembers(Array.isArray(memberData) ? memberData : []);
       })
-      .catch(() => {
+      .catch(err => {
         setComments([]);
         setMembers([]);
+        setError(err?.message || "Could not load discussion for this project.");
       })
       .finally(() => setLoading(false));
   }, [project.id, token]);
 
+  useEffect(() => {
+    loadDiscussion();
+  }, [loadDiscussion]);
+
   async function sendComment() {
     if (!text.trim()) return;
     setSending(true);
+    setError("");
     try {
       const newComment = await api(
         `/projects/${project.id}/comments`,
@@ -48,7 +77,7 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
       setComments(prev => [...prev, newComment]);
       setText("");
     } catch (err) {
-      console.error("Comment failed:", err);
+      setError(err?.message || "Could not post your comment. Please try again.");
     } finally {
       setSending(false);
     }
@@ -68,8 +97,8 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
       const memberData = await api(`/projects/${project.id}/members`, {}, token);
       setMembers(Array.isArray(memberData) ? memberData : []);
       onRefresh?.();
-    } catch {
-      onJoin?.({ type: "error", msg: "Could not join project. Please try again." });
+    } catch (err) {
+      onJoin?.({ type: "error", msg: err?.message || "Could not join project. Please try again." });
     } finally {
       setJoining(false);
     }
@@ -143,6 +172,29 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
           <p style={{ fontSize: 14, color: "var(--t2)", lineHeight: 1.78, marginBottom: 22 }}>
             {project.description || "No description provided."}
           </p>
+
+          {/* Skills needed */}
+          {skills.length > 0 && (
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 10 }}>
+                <Sparkles size={14} color="var(--t2)" />
+                <span style={{ fontWeight: 600, fontSize: 14, color: "var(--t1)" }}>Skills needed</span>
+              </div>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {skills.map(skill => (
+                  <span
+                    key={skill}
+                    style={{
+                      padding: "5px 13px", fontSize: 13, fontWeight: 500,
+                      background: "var(--accent-bg)", color: "var(--accent)", borderRadius: 20,
+                    }}
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Join CTA */}
           {!isOwner && !joined && (
@@ -228,21 +280,39 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {comments.map((c, i) => {
-                const author = c.user?.name || c.user?.username || c.author || "Anonymous";
+                const author = c.authorName || c.user?.name || "Anonymous";
+                const ghUrl = c.authorGithubUrl || c.user?.githubUrl;
+                const handle = githubHandle(ghUrl);
                 return (
-                  <div key={i} style={{ display: "flex", gap: 10 }}>
-                    <div
-                      style={{
-                        width: 26, height: 26, borderRadius: "50%",
-                        background: "var(--surface-2)", flexShrink: 0,
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        fontSize: 10, fontWeight: 700, color: "var(--t2)",
-                      }}
-                    >
-                      {author[0]?.toUpperCase()}
-                    </div>
+                  <div key={c.id || i} style={{ display: "flex", gap: 10 }}>
+                    <Avatar
+                      name={author}
+                      src={c.authorAvatarUrl}
+                      size={26}
+                      style={{ background: "var(--surface-2)", color: "var(--t2)" }}
+                    />
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: 13, color: "var(--t1)", marginBottom: 3 }}>{author}</div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 3 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: "var(--t1)" }}>{author}</span>
+                        {handle && (
+                          <a
+                            href={ghUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: 4,
+                              fontSize: 12, fontWeight: 500, color: "var(--accent)",
+                              textDecoration: "none",
+                            }}
+                          >
+                            <GithubIcon size={12} />
+                            @{handle}
+                          </a>
+                        )}
+                        {c.createdAt && (
+                          <span style={{ fontSize: 11, color: "var(--t3)" }}>{timeAgo(c.createdAt)}</span>
+                        )}
+                      </div>
                       <p style={{ fontSize: 13, color: "var(--t2)", lineHeight: 1.65 }}>{c.content || c.text}</p>
                     </div>
                   </div>
@@ -254,6 +324,17 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
 
         {/* ── Comment input ── */}
         <div style={{ padding: "14px 22px", borderTop: "1px solid var(--border)" }}>
+          {error && (
+            <div
+              style={{
+                marginBottom: 9, padding: "8px 12px", fontSize: 12,
+                background: "#FEF2F2", border: "1px solid #FECACA",
+                borderRadius: "var(--r-sm)", color: "var(--red)",
+              }}
+            >
+              {error}
+            </div>
+          )}
           <div style={{ display: "flex", gap: 8 }}>
             <input
               value={text}

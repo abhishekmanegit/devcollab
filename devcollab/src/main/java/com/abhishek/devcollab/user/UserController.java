@@ -1,11 +1,13 @@
 package com.abhishek.devcollab.user;
 
-import com.abhishek.devcollab.dto.UserProfileDTO;
+import com.abhishek.devcollab.dto.UpdateProfileDTO;
 import com.abhishek.devcollab.dto.UserResponseDTO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-import com.abhishek.devcollab.dto.UpdateProfileDTO;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -15,48 +17,35 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
 
-    // CREATE USER (optional now)
     @PostMapping
     public UserResponseDTO createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
-    // GET ALL USERS
     @GetMapping
     public List<UserResponseDTO> getAllUsers() {
         return userService.getAllUsers();
     }
 
-    // 🔥 GET CURRENT USER PROFILE
     @GetMapping("/me")
     public User getProfile(Authentication authentication) {
-
-        String email = authentication.getName();
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userService.getByEmail(authentication.getName());
     }
 
-
     @PutMapping("/update")
-    public String updateProfile(
+    public User updateProfile(
             Authentication authentication,
-            @RequestBody UpdateProfileDTO dto
+            @Valid @RequestBody UpdateProfileDTO dto
     ) {
+        return userService.updateProfile(authentication.getName(), dto);
+    }
 
-        String email = authentication.getName();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        user.setBio(dto.getBio());
-
-        user.setSkills(String.join(",", dto.getSkills()));;
-
-        userRepository.save(user);
-
-        return "Profile updated";
+    @PostMapping(value = "/me/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public User uploadAvatar(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file
+    ) {
+        return userService.updateAvatar(authentication.getName(), file);
     }
 }

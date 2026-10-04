@@ -23,8 +23,8 @@ export default function CreateProjectModal({ token, onClose, onCreated }) {
       }, token);
       onCreated();
       onClose();
-    } catch {
-      setErr("Failed to create project. Please try again.");
+    } catch (err) {
+      setErr(err?.message || "Failed to create project. Please try again.");
     } finally {
       setLoading(false);
     }

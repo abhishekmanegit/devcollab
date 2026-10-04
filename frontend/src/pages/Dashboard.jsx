@@ -1,26 +1,38 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Search, FolderOpen, Loader2 } from "lucide-react";
 import { api } from "../api/api";
 import ProjectCard from "../components/ProjectCard";
 import ProjectDetailPanel from "../modals/ProjectDetailPanel";
 
-export default function Dashboard({ token, user, onShowCreate, refreshKey, onToast }) {
+export default function Dashboard({ token, onShowCreate, refreshKey, onToast }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [selected, setSelected] = useState(null);
   const [search, setSearch]     = useState("");
   const [filter, setFilter]     = useState("all");
 
-  const loadProjects = () => {
-    setLoading(true);
+  const fetchProjects = useCallback(() => {
     const path = filter === "mine" ? "/projects/my-projects" : "/projects";
-    api(path, {}, token)
-      .then(data => setProjects(Array.isArray(data) ? data : data?.content || []))
-      .catch(() => setProjects([]))
+    return api(path, {}, token)
+      .then(data => {
+        setProjects(Array.isArray(data) ? data : []);
+        return data;
+      })
+      .catch(err => {
+        setProjects([]);
+        if (err?.status !== 401) {
+          onToast?.(err?.message || "Could not load projects.", "error");
+        }
+        return [];
+      })
       .finally(() => setLoading(false));
-  };
+  }, [filter, token, onToast]);
 
-  useEffect(loadProjects, [filter, token, refreshKey]);
+  // refreshKey is not read inside fetchProjects; depending on it here is what makes the
+  // effect below refetch after a project is created (App bumps it).
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects, refreshKey]);
 
   const filtered = projects.filter(p =>
     (p.title || p.name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -34,8 +46,9 @@ export default function Dashboard({ token, user, onShowCreate, refreshKey, onToa
 
   function handleJoinResult(toast) {
     onToast?.(toast.msg, toast.type);
-    loadProjects();
-    if (selected) {
+
+    fetchProjects().then(() => {
+      if (!selected) return;
       api(filter === "mine" ? "/projects/my-projects" : "/projects", {}, token)
         .then(data => {
           const list = Array.isArray(data) ? data : [];
@@ -43,7 +56,7 @@ export default function Dashboard({ token, user, onShowCreate, refreshKey, onToa
           if (updated) setSelected(updated);
         })
         .catch(() => {});
-    }
+    });
   }
 
   return (
@@ -173,11 +186,12 @@ export default function Dashboard({ token, user, onShowCreate, refreshKey, onToa
       {/* Detail panel */}
       {selected && (
         <ProjectDetailPanel
+          key={selected.id}
           project={selected}
           token={token}
           onClose={() => setSelected(null)}
           onJoin={handleJoinResult}
-          onRefresh={loadProjects}
+          onRefresh={fetchProjects}
         />
       )}
     </div>

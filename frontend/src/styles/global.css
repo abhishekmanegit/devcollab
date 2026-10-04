@@ -112,3 +112,49 @@ button {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* ── Boot / offline screens ── */
+.boot-screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px;
+  text-align: center;
+  background: var(--bg);
+}
+
+.boot-screen h2 {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--t1);
+}
+
+.boot-screen p {
+  font-size: 14px;
+  color: var(--t2);
+  max-width: 380px;
+  line-height: 1.65;
+}
+
+.btn-primary {
+  margin-top: 6px;
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border-radius: var(--r-sm);
+}
+
+.btn-primary:hover {
+  background: var(--accent-h);
+}
+
+@media (max-width: 860px) {
+  .auth-split {
+    display: none !important;
+  }
+}

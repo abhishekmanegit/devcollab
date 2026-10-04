@@ -1,11 +1,13 @@
 package com.abhishek.devcollab.comment;
 
+import com.abhishek.devcollab.dto.CommentRequestDTO;
+import com.abhishek.devcollab.dto.CommentResponseDTO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -14,24 +16,17 @@ public class CommentController {
 
     private final CommentService commentService;
 
-    // ADD COMMENT
     @PostMapping("/{id}/comments")
-    public Comment addComment(
+    public CommentResponseDTO addComment(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body,
+            @Valid @RequestBody CommentRequestDTO request,
             Authentication auth
     ) {
-
-        return commentService.addComment(
-                id,
-                body.get("content"),
-                auth.getName()
-        );
+        return commentService.addComment(id, request.getContent(), auth.getName());
     }
 
-    // GET COMMENTS
     @GetMapping("/{id}/comments")
-    public List<Comment> getComments(@PathVariable Long id) {
+    public List<CommentResponseDTO> getComments(@PathVariable Long id) {
         return commentService.getComments(id);
     }
 }

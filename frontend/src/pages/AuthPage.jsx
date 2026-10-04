@@ -31,11 +31,12 @@ export default function AuthPage({ onAuth }) {
         const token = typeof data === "string" ? data : (data.token || data.jwt || data.accessToken);
         onAuth(token);
       }
-    } catch {
+    } catch (err) {
       setErr(
-        tab === "login"
-          ? "Invalid credentials. Please try again."
-          : "Registration failed. Email may already be taken."
+        err?.message ||
+          (tab === "login"
+            ? "Invalid credentials. Please try again."
+            : "Registration failed. Email may already be taken.")
       );
     } finally {
       setLoading(false);
@@ -46,7 +47,7 @@ export default function AuthPage({ onAuth }) {
     <div style={{ minHeight: "100vh", display: "flex", background: "var(--bg)" }}>
 
       {/* ── Left brand panel ── */}
-      <div style={{
+      <div className="auth-split" style={{
         width: "42%", background: "#0D1117", flexShrink: 0,
         display: "flex", flexDirection: "column", justifyContent: "center",
         padding: "60px 56px", position: "relative", overflow: "hidden",
