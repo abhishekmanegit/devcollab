@@ -1,10 +1,12 @@
-import { LayoutDashboard, User, LogOut, Code2 } from "lucide-react";
+import { LayoutDashboard, User, LogOut, Code2, Search, Handshake } from "lucide-react";
 import Avatar from "./Avatar";
 
-export default function Sidebar({ page, setPage, user, onLogout }) {
+export default function Sidebar({ page, setPage, user, onLogout, pendingCount = 0 }) {
   const navItems = [
-    { id: "dashboard", label: "Projects",   icon: LayoutDashboard },
-    { id: "profile",   label: "My Profile", icon: User },
+    { id: "dashboard", label: "Projects",      icon: LayoutDashboard, badge: 0 },
+    { id: "people",    label: "Find Developers", icon: Search,        badge: 0 },
+    { id: "requests",  label: "Collaborations", icon: Handshake,     badge: pendingCount },
+    { id: "profile",   label: "My Profile",    icon: User,           badge: 0 },
   ];
 
   return (
@@ -52,7 +54,7 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
           Navigation
         </p>
 
-        {navItems.map(({ id, label, icon: Icon }) => (
+        {navItems.map(({ id, label, icon: Icon, badge }) => (
           <button
             key={id}
             onClick={() => setPage(id)}
@@ -73,6 +75,14 @@ export default function Sidebar({ page, setPage, user, onLogout }) {
           >
             <Icon size={15} />
             {label}
+            {badge > 0 && (
+              <span style={{
+                marginLeft: "auto", padding: "1px 7px", fontSize: 11, fontWeight: 700,
+                background: "var(--accent)", color: "#fff", borderRadius: 20,
+              }}>
+                {badge}
+              </span>
+            )}
           </button>
         ))}
       </nav>

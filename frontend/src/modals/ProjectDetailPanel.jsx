@@ -1,31 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { X, MessageSquare, Send, Loader2, Users, Sparkles } from "lucide-react";
-import { api, githubHandle } from "../api/api";
+import { X, MessageSquare, Send, Loader2, Users, Sparkles, UserPlus } from "lucide-react";
+import { api, githubHandle, timeAgo } from "../api/api";
 import Avatar from "../components/Avatar";
 import GithubIcon from "../components/GithubIcon";
 
 function creatorName(project) {
   return project.creatorName || project.createdBy?.name || project.owner?.username || "Unknown";
-}
-
-function timeAgo(value) {
-  if (!value) return "";
-  const then = new Date(value).getTime();
-  if (Number.isNaN(then)) return "";
-
-  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (seconds < 60) return "just now";
-
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-
-  const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-
-  return new Date(value).toLocaleDateString();
 }
 
 export default function ProjectDetailPanel({ project, token, onClose, onJoin, onRefresh }) {
@@ -36,12 +16,19 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
   const [joining, setJoining]   = useState(false);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState("");
+  const [invitable, setInvitable] = useState([]);
+  const [inviting, setInviting]   = useState(null);
+  const [notice, setNotice]       = useState("");
 
   const joined = project.joined;
   const isOwner = project.owner;
   const name = project.title || project.name;
   const creator = creatorName(project);
   const skills = Array.isArray(project.skills) ? project.skills : [];
+  const memberIds = new Set(members.map(m => m.id));
+  const addable = project.owner
+    ? invitable.filter(person => !memberIds.has(person.id))
+    : [];
 
   const loadDiscussion = useCallback(() => {
     return Promise.all([
@@ -63,6 +50,40 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
   useEffect(() => {
     loadDiscussion();
   }, [loadDiscussion]);
+
+  // Owners can pull in developers they are connected with.
+  useEffect(() => {
+    if (!project.owner) return;
+
+    let cancelled = false;
+
+    api("/collaborations/connections", {}, token)
+      .then(data => { if (!cancelled) setInvitable(Array.isArray(data) ? data : []); })
+      .catch(() => { if (!cancelled) setInvitable([]); });
+
+    return () => { cancelled = true; };
+  }, [project.owner, token]);
+
+  async function addMember(userId, name) {
+    setInviting(userId);
+    setError("");
+    try {
+      const result = await api(
+        `/projects/${project.id}/members`,
+        { method: "POST", body: JSON.stringify({ userId }) },
+        token
+      );
+      setInvitable(prev => prev.filter(person => person.id !== userId));
+      const memberData = await api(`/projects/${project.id}/members`, {}, token);
+      setMembers(Array.isArray(memberData) ? memberData : []);
+      onRefresh?.();
+      if (result?.message) setNotice(result.message);
+    } catch (err) {
+      setError(err?.message || `Could not add ${name}.`);
+    } finally {
+      setInviting(null);
+    }
+  }
 
   async function sendComment() {
     if (!text.trim()) return;
@@ -251,6 +272,44 @@ export default function ProjectDetailPanel({ project, token, onClose, onJoin, on
                     <span style={{ fontWeight: 500, color: "var(--t1)" }}>{m.name}</span>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {notice && (
+              <p style={{
+                marginTop: 10, padding: "7px 11px", fontSize: 12,
+                background: "var(--green-bg)", border: "1px solid #BBF7D0",
+                borderRadius: "var(--r-sm)", color: "var(--green)",
+              }}>
+                {notice}
+              </p>
+            )}
+
+            {isOwner && addable.length > 0 && (
+              <div style={{ marginTop: 14 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, color: "var(--t3)", textTransform: "uppercase", letterSpacing: ".06em", marginBottom: 8 }}>
+                  Add from your connections
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {addable.map(person => (
+                    <button
+                      key={person.id}
+                      onClick={() => addMember(person.id, person.name)}
+                      disabled={inviting === person.id}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 7,
+                        padding: "6px 12px", fontSize: 13, fontWeight: 500,
+                        background: "var(--surface)", color: "var(--accent)",
+                        border: "1px dashed var(--accent)", borderRadius: 20,
+                      }}
+                    >
+                      {inviting === person.id
+                        ? <Loader2 size={12} className="spin" />
+                        : <UserPlus size={12} />}
+                      {person.name}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

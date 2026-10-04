@@ -1,7 +1,8 @@
 package com.abhishek.devcollab.user;
 
+import com.abhishek.devcollab.dto.PublicProfileDTO;
+import com.abhishek.devcollab.dto.PublicUserDTO;
 import com.abhishek.devcollab.dto.UpdateProfileDTO;
-import com.abhishek.devcollab.dto.UserResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
@@ -17,20 +18,22 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
-
-    @PostMapping
-    public UserResponseDTO createUser(@RequestBody User user) {
-        return userService.createUser(user);
-    }
-
-    @GetMapping
-    public List<UserResponseDTO> getAllUsers() {
-        return userService.getAllUsers();
-    }
+    private final UserDirectoryService directoryService;
 
     @GetMapping("/me")
     public User getProfile(Authentication authentication) {
         return userService.getByEmail(authentication.getName());
+    }
+
+    /** Searches other developers by name, skills or bio. Never returns email addresses. */
+    @GetMapping("/search")
+    public List<PublicUserDTO> search(@RequestParam("q") String q, Authentication authentication) {
+        return directoryService.search(authentication.getName(), q);
+    }
+
+    @GetMapping("/{id}")
+    public PublicProfileDTO publicProfile(@PathVariable Long id, Authentication authentication) {
+        return directoryService.profile(authentication.getName(), id);
     }
 
     @PutMapping("/update")

@@ -1,7 +1,6 @@
 package com.abhishek.devcollab.user;
 
 import com.abhishek.devcollab.dto.UpdateProfileDTO;
-import com.abhishek.devcollab.dto.UserResponseDTO;
 import com.abhishek.devcollab.exception.ApiException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -15,7 +14,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -40,32 +38,6 @@ public class UserService {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.uploadRoot = Path.of(uploadDir).toAbsolutePath().normalize();
-    }
-
-    @Transactional
-    public UserResponseDTO createUser(User user) {
-
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        User savedUser = userRepository.save(user);
-
-        return UserResponseDTO.builder()
-                .id(savedUser.getId())
-                .name(savedUser.getName())
-                .email(savedUser.getEmail())
-                .build();
-    }
-
-    public List<UserResponseDTO> getAllUsers() {
-
-        return userRepository.findAll()
-                .stream()
-                .map(user -> UserResponseDTO.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .build())
-                .collect(Collectors.toList());
     }
 
     public User getByEmail(String email) {

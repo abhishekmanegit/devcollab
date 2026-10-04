@@ -6,6 +6,8 @@ import Toast from "./components/Toast";
 import AuthPage from "./pages/AuthPage";
 import Dashboard from "./pages/Dashboard";
 import ProfilePage from "./pages/ProfilePage";
+import PeoplePage from "./pages/PeoplePage";
+import RequestsPage from "./pages/RequestsPage";
 import CreateProjectModal from "./modals/CreateProjectModal";
 import "./styles/global.css";
 
@@ -18,6 +20,7 @@ export default function App() {
   const [toast, setToast]           = useState(null);
   const [projectRefresh, setProjectRefresh] = useState(0);
   const [retryKey, setRetryKey]     = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("dc_token");
@@ -50,6 +53,19 @@ export default function App() {
 
     return () => { cancelled = true; };
   }, [token, retryKey, handleLogout]);
+
+  // Keep the sidebar badge in sync with pending collaboration requests.
+  useEffect(() => {
+    if (!token || status !== "ready") return;
+
+    let cancelled = false;
+
+    api("/collaborations/requests/pending-count", {}, token)
+      .then(data => { if (!cancelled) setPendingCount(data?.count ?? 0); })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
+  }, [token, status]);
 
   function handleAuth(newToken) {
     localStorage.setItem("dc_token", newToken);
@@ -102,6 +118,7 @@ export default function App() {
         setPage={setPage}
         user={user}
         onLogout={handleLogout}
+        pendingCount={pendingCount}
       />
 
       {page === "dashboard" && (
@@ -110,6 +127,18 @@ export default function App() {
           refreshKey={projectRefresh}
           onToast={showToast}
           onShowCreate={() => setShowCreate(true)}
+        />
+      )}
+
+      {page === "people" && (
+        <PeoplePage token={token} onToast={showToast} />
+      )}
+
+      {page === "requests" && (
+        <RequestsPage
+          token={token}
+          onToast={showToast}
+          onCountChange={setPendingCount}
         />
       )}
 

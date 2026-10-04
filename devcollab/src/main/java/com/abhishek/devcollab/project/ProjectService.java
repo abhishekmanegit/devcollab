@@ -3,6 +3,7 @@ package com.abhishek.devcollab.project;
 import com.abhishek.devcollab.dto.CreateProjectRequestDTO;
 import com.abhishek.devcollab.dto.MemberResponseDTO;
 import com.abhishek.devcollab.dto.ProjectResponseDTO;
+import com.abhishek.devcollab.collaboration.CollaborationService;
 import com.abhishek.devcollab.exception.ApiException;
 import com.abhishek.devcollab.user.User;
 import com.abhishek.devcollab.user.UserRepository;
@@ -26,6 +27,7 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMemberRepository projectMemberRepository;
+    private final CollaborationService collaborationService;
 
     @Transactional
     public ProjectResponseDTO createProject(CreateProjectRequestDTO request, String email) {
@@ -80,6 +82,42 @@ public class ProjectService {
         return "Joined project successfully";
     }
 
+    /**
+     * Lets the owner add a developer they are connected with. Anyone else must
+     * join on their own, so this cannot be used to bypass the collaboration flow.
+     */
+    @Transactional
+    public String addMember(Long projectId, Long userId, String email) {
+        User owner = requireUser(email);
+        User invitee = userRepository.findById(userId)
+                .orElseThrow(() -> ApiException.notFound("That developer no longer exists"));
+
+        Project project = requireProject(projectId);
+
+        if (!project.getCreatedBy().getId().equals(owner.getId())) {
+            throw ApiException.forbidden("Only the project owner can add members directly");
+        }
+
+        if (owner.getId().equals(invitee.getId())) {
+            throw ApiException.badRequest("You already own this project");
+        }
+
+        if (!collaborationService.isConnected(owner.getId(), invitee.getId())) {
+            throw ApiException.forbidden("You can only add developers who accepted your collaboration request");
+        }
+
+        if (projectMemberRepository.existsByUserAndProject(invitee, project)) {
+            return "Already a member of this project";
+        }
+
+        projectMemberRepository.save(ProjectMember.builder()
+                .user(invitee)
+                .project(project)
+                .build());
+
+        return "Added " + invitee.getName() + " to the project";
+    }
+
     public List<MemberResponseDTO> getProjectMembers(Long projectId) {
         Project project = requireProject(projectId);
 
@@ -87,7 +125,8 @@ public class ProjectService {
                 .map(member -> MemberResponseDTO.builder()
                         .id(member.getUser().getId())
                         .name(member.getUser().getName())
-                        .email(member.getUser().getEmail())
+                        .githubUrl(member.getUser().getGithubUrl())
+                .profilePictureUrl(member.getUser().getProfilePictureUrl())
                         .build())
                 .toList();
     }

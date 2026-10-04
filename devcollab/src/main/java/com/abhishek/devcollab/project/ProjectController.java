@@ -1,5 +1,6 @@
 package com.abhishek.devcollab.project;
 
+import com.abhishek.devcollab.dto.AddMemberRequestDTO;
 import com.abhishek.devcollab.dto.CreateProjectRequestDTO;
 import com.abhishek.devcollab.dto.MemberResponseDTO;
 import com.abhishek.devcollab.dto.ProjectResponseDTO;
@@ -22,6 +23,15 @@ public class ProjectController {
     public Map<String, String> joinProject(@PathVariable Long id, Authentication auth) {
         String message = projectService.joinProject(id, auth.getName());
         return Map.of("message", message);
+    }
+
+    @PostMapping("/{id}/members")
+    public Map<String, String> addMember(
+            @PathVariable Long id,
+            @Valid @RequestBody AddMemberRequestDTO request,
+            Authentication auth
+    ) {
+        return Map.of("message", projectService.addMember(id, request.getUserId(), auth.getName()));
     }
 
     @GetMapping("/{id}/members")
