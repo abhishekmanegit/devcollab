@@ -4,7 +4,7 @@
 
 <div align="center">
 
-# 🚀 DevCollab
+# DevCollab
 
 ### Build together, ship faster.
 
