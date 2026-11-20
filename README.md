@@ -296,7 +296,7 @@ Contributions are welcome!
 
 # 👨‍💻 Author
 
-### Abhishek
+### Abhishek Mane
 
 GitHub:
 https://github.com/abhishekmanegit
